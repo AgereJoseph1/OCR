@@ -50,7 +50,7 @@ def detect_text(image_path):
     """Detects text in an image using Google Vision API."""
     client = vision.ImageAnnotatorClient()
 
-    with io.open(image_path, 'rb') as image_file:
+    with io.open(image_path, 'wb') as image_file:
         content = image_file.read()
 
     image = vision.Image(content=content)
