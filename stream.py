@@ -3,6 +3,7 @@ import os
 import io
 from google.cloud import vision
 from googletrans import Translator
+import time
 
 st.markdown(
     '<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" rel="stylesheet">',
@@ -39,6 +40,8 @@ st.markdown(
 st.markdown(f"<div class ='card alert alert-success' style='color:black'>Optical Character recognition Software</div>",unsafe_allow_html=True)
 
 
+
+
 file_upload = st.file_uploader("Upload Image file")
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
@@ -51,7 +54,9 @@ def detect_text(image_path):
         content = image_file.read()
 
     image = vision.Image(content=content)
+    start_time = time.time()
     response = client.text_detection(image=image)
+    end_time = time.time()
     texts = response.text_annotations
 
     if response.error.message:
@@ -61,9 +66,9 @@ def detect_text(image_path):
                 response.error.message))
     
     if texts:
-        return texts[0].description
+        return texts[0].description, end_time - start_time
     else:
-        return None
+        return None, end_time - start_time
 
 def translate_text(text, src='de', dest='en'):
     """Translates text from source language to destination language using Google Translate API."""
@@ -73,20 +78,27 @@ def translate_text(text, src='de', dest='en'):
 
 def detect_and_translate(image_path):
     """Detects text in an image and translates it from German to English."""
-    german_text = detect_text(image_path)
+    german_text, detection_time = detect_text(image_path)
     with st.expander("Original Image"):
         st.image(file_upload.name)
 
     if german_text:
+
+        with st.expander("Metrics"):
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Detection Time", detection_time, "secs")
+            col2.metric("Wind", "9 mph", "-8%")
+            col3.metric("Humidity", "86")
         with st.expander("German Text"):
-            st.markdown(f"<span class='note card alert-warning ' style='color: black'>Detected German Text: {german_text}</span>",unsafe_allow_html=True)
+            st.markdown(f"<span class='note card alert-warning ' style='color: black'>{german_text}</span>",unsafe_allow_html=True)
         
         print("")
         english_text = translate_text(german_text)
         with st.expander("Translated Text"):
-            st.markdown(f"<span class='note card' style='color: black'>Translated English Text: {english_text}</span>",unsafe_allow_html=True)
+            st.markdown(f"<span class='note card' style='color: black'>{english_text}</span>",unsafe_allow_html=True)
+        
     else:
-        print("No text detected.")
+        st.write("No text detected.")
 
 
 if st.button("submit"):
