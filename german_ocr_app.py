@@ -1,39 +1,50 @@
-import streamlit as st
-from PIL import Image
-import easyocr
+import os
+import io
+from google.cloud import vision
 from googletrans import Translator
 
-# Load EasyOCR and Translator just once
-reader = easyocr.Reader(['de'])
-translator = Translator()
+# Set the path to your Google Cloud Vision API credentials JSON file
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
 
-def recognize_and_translate(image):
-    results = reader.readtext(image)
-    extracted_text = " ".join([text[1] for text in results])
-    translation = translator.translate(extracted_text, src='de', dest='en').text
-    return extracted_text, translation
+def detect_text(image_path):
+    """Detects text in an image using Google Vision API."""
+    client = vision.ImageAnnotatorClient()
 
-def save_uploaded_file(uploaded_file):
-    try:
-        with open(uploaded_file.name, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        return uploaded_file.name
-    except Exception as e:
+    with io.open(image_path, 'rb') as image_file:
+        content = image_file.read()
+
+    image = vision.Image(content=content)
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    if response.error.message:
+        raise Exception(
+            '{}\nFor more info on error messages, check: '
+            'https://cloud.google.com/apis/design/errors'.format(
+                response.error.message))
+    
+    if texts:
+        return texts[0].description
+    else:
         return None
 
-st.title('German Text OCR and Translation')
-st.write("Upload an image with German text, and it will be translated into English.")
+def translate_text(text, src='de', dest='en'):
+    """Translates text from source language to destination language using Google Translate API."""
+    translator = Translator()
+    translation = translator.translate(text, src=src, dest=dest)
+    return translation.text
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-if uploaded_file is not None:
-    image_path = save_uploaded_file(uploaded_file)
-    if image_path:
-        image = Image.open(image_path)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
-        with st.spinner('Recognizing text and translating...'):
-            extracted_text, translated_text = recognize_and_translate(image_path)
-            st.success('Done!')
-            st.subheader('Extracted Text')
-            st.write(extracted_text)
-            st.subheader('Translated Text')
-            st.write(translated_text)
+def detect_and_translate(image_path):
+    """Detects text in an image and translates it from German to English."""
+    german_text = detect_text(image_path)
+    if german_text:
+        print(f"Detected German Text: {german_text}")
+        print("")
+        english_text = translate_text(german_text)
+        print(f"Translated English Text: {english_text}")
+    else:
+        print("No text detected.")
+
+# Example usage
+# Replace '/mnt/data/handwritten.jpeg' with the actual image file path
+detect_and_translate('handwritten.jpeg')
