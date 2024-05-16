@@ -4,9 +4,7 @@ import io
 from google.cloud import vision
 from googletrans import Translator
 import time
-import random
 
-# Import necessary styles
 st.markdown(
     '<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" rel="stylesheet">',
     unsafe_allow_html=True,
@@ -17,7 +15,6 @@ st.markdown(
 )
 st.markdown("""""", unsafe_allow_html=True)
 
-# Hide Streamlit header, footer, and menu
 hide_streamlit_style = """
             <style>
                 header{visibility:hidden;}
@@ -31,30 +28,32 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# Navbar
 st.markdown(
     """
     <nav class="navbar fixed-top navbar-expand-lg navbar-dark" style="background-color: #4267B2;">
-    <a class="navbar-brand" href="#" target="_blank">Redox OCR</a>  
+    <a class="navbar-brand" href="#"  target="_blank">Redox OCR</a>  
     </nav>
 """,
     unsafe_allow_html=True,
 )
 
-# Title Card
-st.markdown(f"<div class='card alert alert-success' style='color:black'>Optical Character Recognition Software</div>", unsafe_allow_html=True)
+st.markdown(f"<div class ='card alert alert-success' style='color:black'>Optical Character recognition Software</div>",unsafe_allow_html=True)
 
-# File uploader
-file_upload = st.file_uploader("Upload Image file", type=["png", "jpg", "jpeg"])
 
-# Google Vision API credentials
+
+
+file_upload = st.file_uploader("Upload Image file")
+
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
 
-def detect_text(image_content):
+def detect_text(image_path):
     """Detects text in an image using Google Vision API."""
     client = vision.ImageAnnotatorClient()
 
-    image = vision.Image(content=image_content)
+    with io.open(image_path, 'rb') as image_file:
+        content = image_file.read()
+
+    image = vision.Image(content=content)
     start_time = time.time()
     response = client.text_detection(image=image)
     end_time = time.time()
@@ -67,25 +66,9 @@ def detect_text(image_content):
                 response.error.message))
     
     if texts:
-        return texts[0].description, end_time - start_time, texts
+        return texts[0].description, end_time - start_time
     else:
-        return None, end_time - start_time, None
-
-def compute_overall_confidence(text_annotations):
-    """Computes the overall confidence score from the text annotations."""
-    confidences = []
-    for text in text_annotations:
-        for symbol in text.description:
-            if hasattr(symbol, 'confidence'):
-                confidences.append(symbol.confidence)
-
-    if confidences:
-        average_confidence = sum(confidences) / len(confidences)
-        # Slightly boost the confidence level for presentation
-        boosted_confidence = min(average_confidence + random.uniform(0.10, 0.15), 1.0)
-        return boosted_confidence
-    else:
-        return random.uniform(0.85, 0.95)  # Default confidence if no annotations are found
+        return None, end_time - start_time
 
 def translate_text(text, src='de', dest='en'):
     """Translates text from source language to destination language using Google Translate API."""
@@ -93,40 +76,31 @@ def translate_text(text, src='de', dest='en'):
     translation = translator.translate(text, src=src, dest=dest)
     return translation.text
 
-def detect_and_translate(image_file):
+def detect_and_translate(image_path):
     """Detects text in an image and translates it from German to English."""
-    image_content = image_file.read()
-    german_text, detection_time, text_annotations = detect_text(image_content)
-    
+    german_text, detection_time = detect_text(image_path)
+    with st.expander("Original Image"):
+        st.image(file_upload.name)
+
     if german_text:
-        overall_confidence = compute_overall_confidence(text_annotations)
-
-        st.markdown("<h3>Results</h3>", unsafe_allow_html=True)
-
-        with st.expander("Original Image"):
-            st.image(image_file)
 
         with st.expander("Metrics"):
-            col1, col2 = st.columns(2)
-            col1.metric("Detection Time", f"{detection_time:.2f} secs")
-            col2.metric("Confidence Level", f"{overall_confidence * 100:.2f}%")
-
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Detection Time", detection_time, "secs")
+            col2.metric("Wind", "9 mph", "-8%")
+            col3.metric("Humidity", "86")
         with st.expander("German Text"):
-            st.markdown(f"<div class='alert alert-warning' style='color: black;'>{german_text}</div>", unsafe_allow_html=True)
-
+            st.markdown(f"<span class='note card alert-warning ' style='color: black'>{german_text}</span>",unsafe_allow_html=True)
+        
+        print("")
         english_text = translate_text(german_text)
         with st.expander("Translated Text"):
-            st.markdown(f"<div class='alert alert-info' style='color: black;'>{english_text}</div>", unsafe_allow_html=True)
+            st.markdown(f"<span class='note card' style='color: black'>{english_text}</span>",unsafe_allow_html=True)
         
     else:
         st.write("No text detected.")
 
-if st.button("Submit"):
-    if file_upload is not None:
-        try:
-            with st.spinner("Processing..."):
-                detect_and_translate(file_upload)
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-    else:
-        st.warning("Please upload an image file.")
+
+if st.button("submit"):
+    with st.spinner("Loading..."):
+        detect_and_translate(file_upload.name)
