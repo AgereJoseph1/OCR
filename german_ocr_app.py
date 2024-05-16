@@ -47,4 +47,4 @@ def detect_and_translate(image_path):
 
 # Example usage
 # Replace '/mnt/data/handwritten.jpeg' with the actual image file path
-detect_and_translate('handwritten.jpeg')
+detect_and_translate('H.jpg')
