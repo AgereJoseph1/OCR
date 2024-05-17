@@ -143,7 +143,7 @@ def process_file(file):
 
         with st.expander("Metrics"):
             col1, col2 = st.columns(2)
-            col1.metric("Detection Time", detection_time ,"secs")
+            col1.metric("Detection Time", int(detection_time) ,"secs")
             col2.metric("Confidence Level", "85%") 
 
         with st.expander("German Text"):
