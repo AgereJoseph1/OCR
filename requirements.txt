@@ -25,11 +25,14 @@ httpx==0.13.3
 hyperframe==5.2.0
 idna==2.10
 Jinja2==3.1.4
+joblib==1.4.2
 jsonschema==4.22.0
 jsonschema-specifications==2023.12.1
+Levenshtein==0.25.1
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
+nltk==3.8.1
 numpy==1.26.4
 packaging==24.0
 pandas==2.2.2
@@ -41,9 +44,13 @@ pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pydeck==0.9.1
 Pygments==2.18.0
+PyMuPDF==1.24.4
+PyMuPDFb==1.24.3
 python-dateutil==2.9.0.post0
 pytz==2024.1
+rapidfuzz==3.9.0
 referencing==0.35.1
+regex==2024.5.15
 requests==2.31.0
 rfc3986==1.5.0
 rich==13.7.1
@@ -57,6 +64,7 @@ tenacity==8.3.0
 toml==0.10.2
 toolz==0.12.1
 tornado==6.4
+tqdm==4.66.4
 typing_extensions==4.11.0
 tzdata==2024.1
 urllib3==2.2.1
