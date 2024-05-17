@@ -145,7 +145,7 @@ def process_file(file):
             col1, col2 = st.columns(2)
             detr = round(detection_time,1)
             col1.metric("Detection Time",  detr,"secs")
-            col2.metric("Confidence Level", "85%") 
+            #col2.metric("Confidence Level", "85%") 
 
         with st.expander("German Text"):
             st.markdown(f"<div class='alert alert-warning' style='color: black;'>{german_text}</div>", unsafe_allow_html=True)
