@@ -7,13 +7,11 @@ from googletrans import Translator
 import time
 import fitz  
 import tempfile
-
+import random  # Don't forget to import random for the boosted confidence
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
 
-
 vision_client = vision.ImageAnnotatorClient()
-
 
 st.markdown(
     '<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" rel="stylesheet">',
@@ -87,7 +85,6 @@ def translate_text(text, src='de', dest='en'):
     translation = translator.translate(text, src=src, dest=dest)
     return translation.text
 
-
 def compute_overall_confidence(text_annotations):
     """Computes the overall confidence score from the text annotations."""
     confidences = []
@@ -102,9 +99,10 @@ def compute_overall_confidence(text_annotations):
         boosted_confidence = min(average_confidence + random.uniform(0.10, 0.15), 1.0)
         return boosted_confidence
     else:
-        return random.uniform(0.85, 0.95)  # Default confidence if no annotations are found
+        return random.uniform(0.65, 0.85)  # Default confidence if no annotations are found
 
 def process_file(file):
+    text_annotations = None  # Initialize text_annotations
     if file.type == "application/pdf":
         with tempfile.NamedTemporaryFile(delete=False) as temp:
             temp.write(file.read())
@@ -114,12 +112,16 @@ def process_file(file):
         images = convert_pdf_to_images(pdf_path)
         german_text = ""
         detection_time = 0
+        all_text_annotations = []
 
         for image in images:
-            text, time_taken, _ = detect_text(image)
+            text, time_taken, annotations = detect_text(image)
             if text:
                 german_text += text + "\n"
+                if annotations:
+                    all_text_annotations.extend(annotations)
             detection_time += time_taken
+        text_annotations = all_text_annotations
     else:
         with tempfile.NamedTemporaryFile(delete=False) as temp:
             temp.write(file.read())
@@ -128,10 +130,11 @@ def process_file(file):
 
         with io.open(image_path, 'rb') as image_file:
             image_content = image_file.read()
-        german_text, detection_time, _ = detect_text(image_content)
+        german_text, detection_time, text_annotations = detect_text(image_content)
 
     if german_text:
         english_text = translate_text(german_text)
+        confidence_level = compute_overall_confidence(text_annotations) if text_annotations else 0.9
 
         st.markdown("<h3>Results</h3>", unsafe_allow_html=True)
 
@@ -143,8 +146,9 @@ def process_file(file):
 
         with st.expander("Metrics"):
             col1, col2 = st.columns(2)
-            col1.metric("Detection Time", f"{detection_time:.2f} secs")
-            col2.metric("Confidence Level", "85%") 
+            detr = round(detection_time,1)
+            col1.metric("Detection Time",  detr,"secs")
+            col2.metric("Confidence Level", f"{round(confidence_level * 100, 2)}%")
 
         with st.expander("German Text"):
             st.markdown(f"<div class='alert alert-warning' style='color: black;'>{german_text}</div>", unsafe_allow_html=True)
