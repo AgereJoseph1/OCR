@@ -47,7 +47,7 @@ st.markdown(
 
 st.markdown(f"<div class ='card alert alert-success' style='color:black'>Optical Character Recognition Software</div>", unsafe_allow_html=True)
 
-file_upload = st.file_uploader("Upload Image or PDF file")
+file_upload = st.file_uploader("Upload Image or PDF file",['Pdf','jpeg','png'])
 
 def detect_text(image_content):
     """Detects text in an image using Google Vision API."""
