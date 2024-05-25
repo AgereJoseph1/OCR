@@ -3,10 +3,13 @@ import os
 import io
 from google.cloud import vision
 from google.oauth2 import service_account
-from googletrans import Translator
 import time
 import fitz  
 import tempfile
+import openai
+
+
+openai.api_key = ''
 import random  # Don't forget to import random for the boosted confidence
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
@@ -80,10 +83,15 @@ def convert_pdf_to_images(pdf_path):
     return images
 
 def translate_text(text, src='de', dest='en'):
-    """Translates text from source language to destination language using Google Translate API."""
-    translator = Translator()
-    translation = translator.translate(text, src=src, dest=dest)
-    return translation.text
+    """Translates text using OpenAI's GPT-4."""
+    prompt = f"Translate the provided German text to English and format it into a well-structured list. Ensure that each question and answer pair is clearly separated and labeled.:\n\n{text}\n\nTranslation:"
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=500
+    )
+    translation = response.choices[0].text.strip()
+    return translation
 
 def compute_overall_confidence(text_annotations):
     """Computes the overall confidence score from the text annotations."""
