@@ -49,7 +49,7 @@ Redox OCR utilizes the following open-source libraries:
 
 - Streamlit
 - Google Cloud Vision API
-- Google Translate API
+- GPT-4 API for translation of german text to English 
 
 ## License
 
