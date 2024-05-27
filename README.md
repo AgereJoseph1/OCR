@@ -13,7 +13,7 @@ Redox OCR is an Optical Character Recognition (OCR) software built using Streaml
 To run Redox OCR locally, you need to have Python installed on your system. You can then install the required dependencies using pip:
 
 ```bash
-pip install streamlit google-cloud-vision googletrans
+pip install -r requirements.txt
 ```
 
 Ensure you have the `credentials.json` file containing your Google Cloud credentials.
