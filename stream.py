@@ -3,11 +3,14 @@ import os
 import io
 from google.cloud import vision
 from google.oauth2 import service_account
-from googletrans import Translator
 import time
 import fitz  
 import tempfile
-import random  # Don't forget to import random for the boosted confidence
+import random 
+from langchain.llms import OpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferMemory
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
 
@@ -45,12 +48,23 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+def openai(german_text):
+    title_template = PromptTemplate(
+    input_variables=['topic'],
+    template='Translate to english {topic}'
+)   
+    llm = OpenAI(api_key='sk-proj-n26WXV0I1kNcYkqSPfbpT3BlbkFJ3vQZ0GQzpxcogCdgJgS0', temperature=0.9)
+    title_memory = ConversationBufferMemory(input_key='topic', memory_key='chat_history')
+    title_chain = LLMChain(llm=llm,  prompt=title_template, verbose=True, output_key='title', memory=title_memory)
+    translation = title_chain.run(german_text)
+    st.markdown(f"<div class='alert alert-info' style='color: black;'>{translation}</div>", unsafe_allow_html=True)
+
 st.markdown(f"<div class ='card alert alert-success' style='color:black'>Optical Character Recognition Software</div>", unsafe_allow_html=True)
 
-file_upload = st.file_uploader("Upload Image or PDF file",["Pdf","jpeg","png"])
+file_upload = st.file_uploader("Upload Image or PDF file",['Pdf','jpeg','png'])
 
 def detect_text(image_content):
-    """Detects text in an image using Google Vision API."""
+ 
     image = vision.Image(content=image_content)
     start_time = time.time()
     response = vision_client.text_detection(image=image)
@@ -69,7 +83,7 @@ def detect_text(image_content):
         return None, end_time - start_time, None
 
 def convert_pdf_to_images(pdf_path):
-    """Converts each page of the PDF to an image."""
+    
     document = fitz.open(pdf_path)
     images = []
     for page_num in range(len(document)):
@@ -79,14 +93,8 @@ def convert_pdf_to_images(pdf_path):
         images.append(image_bytes)
     return images
 
-def translate_text(text, src='de', dest='en'):
-    """Translates text from source language to destination language using Google Translate API."""
-    translator = Translator()
-    translation = translator.translate(text, src=src, dest=dest)
-    return translation.text
-
 def compute_overall_confidence(text_annotations):
-    """Computes the overall confidence score from the text annotations."""
+   
     confidences = []
     for text in text_annotations:
         for symbol in text.description:
@@ -95,14 +103,13 @@ def compute_overall_confidence(text_annotations):
 
     if confidences:
         average_confidence = sum(confidences) / len(confidences)
-        # Slightly boost the confidence level for presentation
+       
         boosted_confidence = min(average_confidence + random.uniform(0.10, 0.15), 1.0)
         return boosted_confidence
     else:
-        return random.uniform(0.65, 0.85)  # Default confidence if no annotations are found
-
+        return random.uniform(0.65, 0.85) 
 def process_file(file):
-    text_annotations = None  # Initialize text_annotations
+    text_annotations = None 
     if file.type == "application/pdf":
         with tempfile.NamedTemporaryFile(delete=False) as temp:
             temp.write(file.read())
@@ -133,7 +140,7 @@ def process_file(file):
         german_text, detection_time, text_annotations = detect_text(image_content)
 
     if german_text:
-        english_text = translate_text(german_text)
+        
         confidence_level = compute_overall_confidence(text_annotations) if text_annotations else 0.9
 
         st.markdown("<h3>Results</h3>", unsafe_allow_html=True)
@@ -153,8 +160,11 @@ def process_file(file):
         with st.expander("German Text"):
             st.markdown(f"<div class='alert alert-warning' style='color: black;'>{german_text}</div>", unsafe_allow_html=True)
 
-        with st.expander("Translated Text"):
-            st.markdown(f"<div class='alert alert-info' style='color: black;'>{english_text}</div>", unsafe_allow_html=True)
+        
+
+        with st.expander(" Openai Translated Text"):
+           openai(german_text=german_text)
+            
     else:
         st.write("No text detected.")
 
