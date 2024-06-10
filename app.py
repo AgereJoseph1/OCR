@@ -3,7 +3,7 @@ import os
 import io
 from google.cloud import vision
 from google.oauth2 import service_account
-from googletrans import Translator
+# from googletrans import Translator
 import time
 import fitz  
 import random  # Don't forget to import random for the boosted confidence
@@ -78,11 +78,11 @@ def convert_pdf_to_images(pdf_path):
         images.append(image_bytes)
     return images
 
-def translate_text(text, src='de', dest='en'):
-    """Translates text from source language to destination language using Google Translate API."""
-    translator = Translator()
-    translation = translator.translate(text, src=src, dest=dest)
-    return translation.text
+# def translate_text(text, src='de', dest='en'):
+#     """Translates text from source language to destination language using Google Translate API."""
+#     translator = Translator()
+#     translation = translator.translate(text, src=src, dest=dest)
+#     return translation.text
 
 def compute_overall_confidence(text_annotations):
     """Computes the overall confidence score from the text annotations."""
@@ -152,8 +152,8 @@ def process_file(file):
         with st.expander("German Text"):
             st.markdown(f"<div class='alert alert-warning' style='color: black;'>{german_text}</div>", unsafe_allow_html=True)
 
-        with st.expander("Translated Text"):
-            st.markdown(f"<div class='alert alert-info' style='color: black;'>{english_text}</div>", unsafe_allow_html=True)
+        # with st.expander("Translated Text"):
+        #     st.markdown(f"<div class='alert alert-info' style='color: black;'>{english_text}</div>", unsafe_allow_html=True)
     else:
         st.write("No text detected.")
 
