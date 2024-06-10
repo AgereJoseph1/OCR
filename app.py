@@ -3,7 +3,7 @@ import os
 import io
 from google.cloud import vision
 from google.oauth2 import service_account
-from googletrans import Translator
+# from googletrans import Translator
 import time
 import fitz  
 import tempfile
@@ -81,28 +81,28 @@ def convert_pdf_to_images(pdf_path):
         images.append(image_bytes)
     return images
 
-def translate_text(text, src='de', dest='en'):
-    """Translates text from source language to destination language using Google Translate API."""
-    translator = Translator()
-    translation = translator.translate(text, src=src, dest=dest)
-    return translation.text
+# def translate_text(text, src='de', dest='en'):
+#     """Translates text from source language to destination language using Google Translate API."""
+#     translator = Translator()
+#     translation = translator.translate(text, src=src, dest=dest)
+#     return translation.text
 
 
-def compute_overall_confidence(text_annotations):
-    """Computes the overall confidence score from the text annotations."""
-    confidences = []
-    for text in text_annotations:
-        for symbol in text.description:
-            if hasattr(symbol, 'confidence'):
-                confidences.append(symbol.confidence)
+# def compute_overall_confidence(text_annotations):
+#     """Computes the overall confidence score from the text annotations."""
+#     confidences = []
+#     for text in text_annotations:
+#         for symbol in text.description:
+#             if hasattr(symbol, 'confidence'):
+#                 confidences.append(symbol.confidence)
 
-    if confidences:
-        average_confidence = sum(confidences) / len(confidences)
-        # Slightly boost the confidence level for presentation
-        boosted_confidence = min(average_confidence + random.uniform(0.10, 0.15), 1.0)
-        return boosted_confidence
-    else:
-        return random.uniform(0.85, 0.95)  # Default confidence if no annotations are found
+#     if confidences:
+#         average_confidence = sum(confidences) / len(confidences)
+#         # Slightly boost the confidence level for presentation
+#         boosted_confidence = min(average_confidence + random.uniform(0.10, 0.15), 1.0)
+#         return boosted_confidence
+#     else:
+#         return random.uniform(0.85, 0.95)  # Default confidence if no annotations are found
 
 def process_file(file):
     if file.type == "application/pdf":
@@ -131,7 +131,7 @@ def process_file(file):
         german_text, detection_time, _ = detect_text(image_content)
 
     if german_text:
-        english_text = translate_text(german_text)
+        # english_text = translate_text(german_text)
 
         st.markdown("<h3>Results</h3>", unsafe_allow_html=True)
 
@@ -143,14 +143,15 @@ def process_file(file):
 
         with st.expander("Metrics"):
             col1, col2 = st.columns(2)
-            col1.metric("Detection Time", f"{detection_time:.2f} secs")
-            col2.metric("Confidence Level", "85%") 
+            detr = round(detection_time,1)
+            col1.metric("Detection Time",  detr,"secs")
+            #col2.metric("Confidence Level", "85%") 
 
         with st.expander("German Text"):
             st.markdown(f"<div class='alert alert-warning' style='color: black;'>{german_text}</div>", unsafe_allow_html=True)
 
-        with st.expander("Translated Text"):
-            st.markdown(f"<div class='alert alert-info' style='color: black;'>{english_text}</div>", unsafe_allow_html=True)
+        # with st.expander("Translated Text"):
+        #     st.markdown(f"<div class='alert alert-info' style='color: black;'>{english_text}</div>", unsafe_allow_html=True)
     else:
         st.write("No text detected.")
 
