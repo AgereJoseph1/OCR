@@ -6,7 +6,6 @@ from google.oauth2 import service_account
 from googletrans import Translator
 import time
 import fitz  
-import tempfile
 import random  # Don't forget to import random for the boosted confidence
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
